@@ -21,6 +21,7 @@ jobs:
             - name: Build
               run: |
                   pnpm -C scripts install
+                  pnpm -C scripts check
                   node scripts/src/index.ts
     linux-build:
         runs-on: docker
