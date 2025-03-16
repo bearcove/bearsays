@@ -3,6 +3,7 @@
 import { promises as fs } from "fs";
 import chalk from "chalk";
 import crypto from "crypto";
+import { formatBytes } from "./utils.ts";
 
 // Define the template for the Homebrew formula
 const formulaTemplate = `
@@ -74,13 +75,6 @@ async function computeSha256(buffer: ArrayBuffer): Promise<string> {
     const hashBuffer = await crypto.subtle.digest("SHA-256", buffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-function formatBytes(bytes: number): string {
-    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-    if (bytes === 0) return "0 Byte";
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
 }
 
 async function main() {
