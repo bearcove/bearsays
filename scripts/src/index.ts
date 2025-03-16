@@ -34,7 +34,7 @@ GITHUB_WORKSPACE	The default working directory on the runner for steps, and the 
 import { promises as fs } from "fs";
 import chalk from "chalk";
 import {
-    BuildContext,
+    type BuildContext,
     formatBytes,
     spawnProcess,
     validateAndExtractBuildContext,

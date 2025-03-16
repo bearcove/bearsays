@@ -1,0 +1,13 @@
+name: pnpm-check
+on:
+    push:
+jobs:
+    pnpm-check:
+        runs-on: mac-arm
+        steps:
+            - name: Check out repository code
+              uses: actions/checkout@v4
+            - name: Install dependencies
+              run: |
+                  cd scripts
+                  pnpm -C scripts check
