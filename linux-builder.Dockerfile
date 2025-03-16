@@ -49,3 +49,4 @@ RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
     tar \
     gzip \
     && rm -rf /var/lib/apt/lists/*
+RUN cargo install cargo-sweep cargo-nextest just
