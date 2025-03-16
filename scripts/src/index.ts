@@ -106,6 +106,10 @@ function validateAndExtractBuildContext(): BuildContext {
         isDryRun = true;
     }
 
+    console.log(
+        chalk.blue(`🔑 GitHub Token: ${githubToken.slice(0, 2)}...${githubToken.slice(-2)}`),
+    );
+
     return {
         cargoTargetDir: process.env.CARGO_TARGET_DIR!,
         arch,
@@ -185,6 +189,11 @@ async function uploadPackage(context: BuildContext, packageFile: string, fileCon
             });
 
             console.log(chalk.blue(`🔢 Response status code: ${response.status}`));
+
+            if (response.status < 200 || response.status >= 300) {
+                console.log(chalk.red(`❌ Upload failed with status code: ${response.status}`));
+                process.exit(1);
+            }
 
             const responseData = await response.text();
             process.stdout.write(responseData);
