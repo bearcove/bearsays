@@ -7,7 +7,6 @@ import { formatBytes } from "./utils.ts";
 
 // Define the authorization token
 const AUTH_TOKEN = "84b4b6c143f3c96dc56dbb3b098646dea1b57485";
-
 // Define the template for the Homebrew formula
 const formulaTemplate = `
 class Bearsays < Formula
@@ -18,11 +17,15 @@ class Bearsays < Formula
 
   if OS.mac?
     url "{{MAC_URL}}",
-        headers: { "Authorization" => "token {{AUTH_TOKEN}}" }
+        headers: [
+          "Authorization: token {{AUTH_TOKEN}}"
+        ]
     sha256 "{{MAC_SHA}}"
   elsif OS.linux?
     url "{{LINUX_URL}}",
-        headers: { "Authorization" => "token {{AUTH_TOKEN}}" }
+        headers: [
+          "Authorization: token {{AUTH_TOKEN}}"
+        ]
     sha256 "{{LINUX_SHA}}"
   end
 
