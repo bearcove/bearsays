@@ -19,21 +19,21 @@ jobs:
                   cargo --version
             - name: Build
               run: |
-                  echo "Building into $CARGO_TARGET_DIR"
-                  mkdir -p $CARGO_TARGET_DIR
+                  echo "Building into ${CARGO_TARGET_DIR}"
+                  mkdir -p ${CARGO_TARGET_DIR}
                   cargo build --verbose --release --timings
                   echo "Sweeping..."
                   cargo install cargo-sweep
                   echo "Size before:"
-                  du -sh $CARGO_TARGET_DIR
+                  du -sh ${CARGO_TARGET_DIR}
                   cargo sweep --time 30
                   echo "Size after:"
-                  du -sh $CARGO_TARGET_DIR
+                  du -sh ${CARGO_TARGET_DIR}
             - name: Upload timing results
               uses: actions/upload-artifact@v3
               with:
                   name: cargo-timing
-                  path: target/cargo-timings/cargo-timing.html
+                  path: ${CARGO_TARGET_DIR}/cargo-timings/cargo-timing.html
     linux-build:
         runs-on: docker
         container:
