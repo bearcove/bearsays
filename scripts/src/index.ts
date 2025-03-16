@@ -190,19 +190,29 @@ async function uploadPackage(context: BuildContext, packageFile: string, fileCon
 
             console.log(chalk.blue(`🔢 Response status code: ${response.status}`));
 
+            const responseData = await response.text();
+
+            console.log(chalk.yellow("----------------------------------------"));
+            console.log(chalk.yellow("📄 Response Data:"));
+            console.log(chalk.yellow("----------------------------------------"));
+            console.log(responseData);
+            console.log(chalk.yellow("----------------------------------------"));
+
             if (response.status < 200 || response.status >= 300) {
-                console.log(chalk.red(`❌ Upload failed with status code: ${response.status}`));
+                console.log(chalk.red("❌ Upload failed"));
+                console.log(
+                    chalk.red(`🚨 Error: Upload failed with status code: ${response.status}`),
+                );
                 process.exit(1);
             }
-
-            const responseData = await response.text();
-            process.stdout.write(responseData);
 
             const uploadTime = Date.now() - uploadStart;
             console.log(chalk.green(`✅ Package upload completed (${uploadTime}ms)`));
             return uploadTime;
         } catch (error) {
+            console.log(chalk.yellow("----------------------------------------"));
             console.log(chalk.red("❌ An error occurred during upload:"));
+            console.log(chalk.yellow("----------------------------------------"));
             console.error(error);
             throw error;
         }
