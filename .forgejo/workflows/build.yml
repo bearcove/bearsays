@@ -9,22 +9,21 @@ on:
 jobs:
     mac-build:
         runs-on: mac-arm
+        env:
+            CARGO_TARGET_DIR: ~/.cache/act/bearsays-mac-build/target
         steps:
             - name: Check out repository code
               uses: actions/checkout@v4
             - name: Make sure cargo/rustup is installed
               run: |
                   cargo --version
-            - name: Cache Cargo Build
-              uses: https://code.forgejo.org/actions/cache@v3
-              with:
-                  path: target
-                  key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
-                  restore-keys: |
-                      ${{ runner.os }}-cargo-build-
             - name: Build
               run: |
+                  du -sh $CARGO_TARGET_DIR
                   cargo build --release
+                  cargo install cargo-sweep
+                  cargo sweep --time 30
+                  du -sh $CARGO_TARGET_DIR
     linux-build:
         runs-on: docker
         container:
