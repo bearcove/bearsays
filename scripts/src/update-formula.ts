@@ -36,9 +36,24 @@ async function generateHomebrewFormula(): Promise<void> {
 
     const owner = "bearcove";
     const repo = "bearsays";
-    const version = "1.4.0"; // Updated version
+    const version = await getLatestVersion();
 
-    const baseUrl = "https://code.bearcove.cloud/api/packages/bearcove/generic/bearsays";
+    async function getLatestVersion(): Promise<string> {
+        const { execSync } = await import("child_process");
+        const tags = execSync("git tag -l").toString().trim().split("\n");
+        const versions = tags
+            .map((tag) => tag.replace("v", ""))
+            .sort((a, b) => {
+                const [aMajor, aMinor, aPatch] = a.split(".").map(Number);
+                const [bMajor, bMinor, bPatch] = b.split(".").map(Number);
+                if (aMajor !== bMajor) return bMajor - aMajor;
+                if (aMinor !== bMinor) return bMinor - aMinor;
+                return bPatch - aPatch;
+            });
+        return versions[0];
+    }
+
+    const baseUrl = `https://code.bearcove.cloud/api/packages/${owner}/generic/${repo}`;
     const macUrl = `${baseUrl}/v${version}/aarch64-apple-darwin.tar.xz`;
     const linuxUrl = `${baseUrl}/v${version}/x86_64-unknown-linux-gnu.tar.xz`;
 
@@ -66,7 +81,7 @@ async function generateHomebrewFormula(): Promise<void> {
     console.log(chalk.yellow("📝 Generated Homebrew formula:"));
     console.log(chalk.cyan(formula));
 
-    const formulaPath = "Formula/bearsays.rb";
+    const formulaPath = `Formula/${repo}.rb`;
     await fs.writeFile(formulaPath, formula);
     console.log(chalk.green(`✅ Homebrew formula written to ${formulaPath}`));
 }
