@@ -39,24 +39,32 @@ jobs:
     linux-build:
         runs-on: docker
         container:
-            image: code.bearcove.cloud/bearcove/earthly-ci:latest
+            image: code.bearcove.cloud/bearcove/linux-builder:rust-1.85.0
             credentials:
-                username: "fasterthanlime"
+                username: "token"
                 password: "${{ secrets.BEARCOVE_PULL_PASSWORD }}"
         steps:
             - name: Check out repository code
               uses: actions/checkout@v4
-
             - name: Make sure cargo/rustup is installed
               run: |
                   cargo --version
-            - name: Cache Cargo Build
-              uses: https://code.forgejo.org/actions/cache@v3
-              with:
-                  path: target
-                  key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
-                  restore-keys: |
-                      ${{ runner.os }}-cargo-build-
             - name: Build
               run: |
-                  cargo build --release
+                  echo "Building into ${CARGO_TARGET_DIR}"
+                  mkdir -p ${CARGO_TARGET_DIR}
+                  cargo build --verbose --release --timings
+                  cp ${CARGO_TARGET_DIR}/cargo-timings/cargo-timing.html ./cargo-timing.html
+
+                  echo "Sweeping..."
+                  cargo install cargo-sweep
+                  echo "Size before:"
+                  du -sh ${CARGO_TARGET_DIR}
+                  cargo sweep --time 30
+                  echo "Size after:"
+                  du -sh ${CARGO_TARGET_DIR}
+            - name: Upload timing results
+              uses: actions/upload-artifact@v3
+              with:
+                  name: cargo-timing
+                  path: ./cargo-timing.html
