@@ -1,4 +1,13 @@
+# this is a Justfile, not a makefile
+
 linux-builder-image:
-    docker build --file linux-builder.Dockerfile --tag code.bearcove.cloud/linux-builder:rust-1.85.0 .
-    docker inspect --size code.bearcove.cloud/linux-builder:rust-1.85.0
-    docker run --rm code.bearcove.cloud/linux-builder:rust-1.85.0 rustc --version
+    #!/bin/bash -eux
+    export TAG=code.bearcove.cloud/bearcove/linux-builder:rust-1.85.0
+    docker build --file linux-builder.Dockerfile --tag "${TAG}" .
+    docker inspect --size "${TAG}"
+    docker run --rm "${TAG}" rustc --version
+
+linux-builder-image-push:
+    #!/bin/bash -eux
+    export TAG=code.bearcove.cloud/bearcove/linux-builder:rust-1.85.0
+    docker push "${TAG}"
