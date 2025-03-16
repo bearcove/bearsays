@@ -25,7 +25,6 @@ jobs:
                   cp ${CARGO_TARGET_DIR}/cargo-timings/cargo-timing.html ./cargo-timing.html
 
                   echo "Sweeping..."
-                  cargo install cargo-sweep
                   echo "Size before:"
                   du -sh ${CARGO_TARGET_DIR}
                   cargo sweep --time 30
@@ -61,7 +60,6 @@ jobs:
                   cp ${CARGO_TARGET_DIR}/cargo-timings/cargo-timing.html ./cargo-timing.html
 
                   echo "Sweeping..."
-                  cargo install cargo-sweep
                   echo "Size before:"
                   du -sh ${CARGO_TARGET_DIR}
                   cargo sweep --time 30
