@@ -5,6 +5,9 @@ import chalk from "chalk";
 import crypto from "crypto";
 import { formatBytes } from "./utils.ts";
 
+// Define the authorization token
+const AUTH_TOKEN = "84b4b6c143f3c96dc56dbb3b098646dea1b57485";
+
 // Define the template for the Homebrew formula
 const formulaTemplate = `
 class Bearsays < Formula
@@ -14,10 +17,12 @@ class Bearsays < Formula
   license "MIT"
 
   if OS.mac?
-    url "{{MAC_URL}}"
+    url "{{MAC_URL}}",
+        headers: { "Authorization" => "token {{AUTH_TOKEN}}" }
     sha256 "{{MAC_SHA}}"
   elsif OS.linux?
-    url "{{LINUX_URL}}"
+    url "{{LINUX_URL}}",
+        headers: { "Authorization" => "token {{AUTH_TOKEN}}" }
     sha256 "{{LINUX_SHA}}"
   end
 
@@ -30,6 +35,33 @@ class Bearsays < Formula
   end
 end
 `.trim();
+
+interface BinaryInfo {
+    sha256: string;
+    size: number;
+}
+
+async function fetchBinaryAndComputeSha256(url: string, headers: HeadersInit): Promise<BinaryInfo> {
+    console.log(chalk.cyan(`🔗 Fetching binary from ${url}...`));
+    const response = await fetch(url, { headers });
+
+    if (response.status !== 200) {
+        throw new Error(`Failed to fetch binary. Status: ${response.status}`);
+    }
+
+    const buffer = await response.arrayBuffer();
+    const size = buffer.byteLength;
+
+    if (size < 100 * 1024) {
+        // 100KB
+        throw new Error(`Binary size is too small: ${formatBytes(size)}`);
+    }
+
+    const sha256 = await computeSha256(buffer);
+    console.log(chalk.green(`✅ Binary fetched. Size: ${formatBytes(size)}`));
+
+    return { sha256, size };
+}
 
 async function generateHomebrewFormula(): Promise<void> {
     console.log(chalk.yellow("🍺 Generating Homebrew formula..."));
@@ -57,26 +89,20 @@ async function generateHomebrewFormula(): Promise<void> {
     const macUrl = `${baseUrl}/v${version}/aarch64-apple-darwin.tar.xz`;
     const linuxUrl = `${baseUrl}/v${version}/x86_64-unknown-linux-gnu.tar.xz`;
 
-    console.log(chalk.cyan("🔗 Fetching Mac binary..."));
-    const macResponse = await fetch(macUrl);
-    const macBuffer = await macResponse.arrayBuffer();
-    const macSha256 = await computeSha256(macBuffer);
-    console.log(chalk.green(`✅ Mac binary fetched. Size: ${formatBytes(macBuffer.byteLength)}`));
+    const headers = {
+        Authorization: `token ${AUTH_TOKEN}`,
+    };
 
-    console.log(chalk.cyan("🔗 Fetching Linux binary..."));
-    const linuxResponse = await fetch(linuxUrl);
-    const linuxBuffer = await linuxResponse.arrayBuffer();
-    const linuxSha256 = await computeSha256(linuxBuffer);
-    console.log(
-        chalk.green(`✅ Linux binary fetched. Size: ${formatBytes(linuxBuffer.byteLength)}`),
-    );
+    const { sha256: macSha256 } = await fetchBinaryAndComputeSha256(macUrl, headers);
+    const { sha256: linuxSha256 } = await fetchBinaryAndComputeSha256(linuxUrl, headers);
 
     let formula = formulaTemplate
         .replace("{{VERSION}}", version)
         .replace("{{MAC_URL}}", macUrl)
         .replace("{{MAC_SHA}}", macSha256)
         .replace("{{LINUX_URL}}", linuxUrl)
-        .replace("{{LINUX_SHA}}", linuxSha256);
+        .replace("{{LINUX_SHA}}", linuxSha256)
+        .replace(/{{AUTH_TOKEN}}/g, AUTH_TOKEN);
 
     console.log(chalk.yellow("📝 Generated Homebrew formula:"));
     console.log(chalk.cyan(formula));
