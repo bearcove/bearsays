@@ -103,11 +103,13 @@ async function createPackageArchive(context: BuildContext) {
         console.log(chalk.blue(`  ${file}`), chalk.green(`(${formatBytes(stats.size)})`));
     }
 
-    // Create the archive
+    // Create the archive. T0 = use all threads, -2 = fast preset
     await spawnProcess({
-        command: "tar",
-        args: ["-cJvf", packageFile, "-C", releaseDir, ...filesToInclude],
-        env: { ...process.env, XZ_OPT: "-2 -T0" },
+        command: "bash",
+        args: [
+            "-c",
+            `tar -cf - -C ${releaseDir} ${filesToInclude.join(" ")} | xz -2 -T0 -c > ${packageFile}`,
+        ],
     });
 
     const archiveTime = Date.now() - archiveStart;
