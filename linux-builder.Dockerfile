@@ -40,7 +40,6 @@ ENV CXX=clang++
 RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
     apt-get update && apt-get install -y --no-install-recommends \
     nodejs \
-    npm \
     curl \
     bash \
     git \
