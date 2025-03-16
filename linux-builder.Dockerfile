@@ -36,8 +36,10 @@ ENV CARGO_PROFILE_RELEASE_DEBUG="line-tables-only"
 ENV CARGO_PROFILE_RELEASE_SPLIT_DEBUGINFO="packed"
 ENV CC=clang
 ENV CXX=clang++
+RUN curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash && \
+    cargo binstall -y cargo-sweep cargo-nextest just
 # Install minimal dependencies for running Gitea/Forgejo Actions
-RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
+RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash - && \
     apt-get update && apt-get install -y --no-install-recommends \
     nodejs \
     curl \
@@ -49,5 +51,4 @@ RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - && \
     tar \
     gzip \
     && rm -rf /var/lib/apt/lists/*
-RUN cargo install cargo-sweep cargo-nextest just
 RUN npm install -g pnpm
