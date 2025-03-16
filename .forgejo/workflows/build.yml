@@ -40,9 +40,13 @@ jobs:
         runs-on: docker
         container:
             image: code.bearcove.cloud/bearcove/linux-builder:rust-1.85.0
+            volumes:
+                - /var/forgejo-persistent-build-storage:/var/forgejo-persistent-build-storage
             credentials:
                 username: "token"
                 password: "${{ secrets.BEARCOVE_PULL_PASSWORD }}"
+        env:
+            CARGO_TARGET_DIR: /var/forgejo-persistent-build-storage/bearsays-linux-build/target
         steps:
             - name: Check out repository code
               uses: actions/checkout@v4
