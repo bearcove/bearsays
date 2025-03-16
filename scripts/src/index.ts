@@ -35,6 +35,13 @@ import { promises as fs } from "fs";
 import { spawn } from "child_process";
 import chalk from "chalk";
 
+function formatBytes(bytes: number): string {
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    if (bytes === 0) return chalk.cyan("0 Byte");
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return chalk.cyan(`${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`);
+}
+
 async function spawnProcess(command: string, args: string[]): Promise<void> {
     return new Promise((resolve, reject) => {
         const child = spawn(command, args, { stdio: "inherit" });
@@ -48,16 +55,20 @@ async function spawnProcess(command: string, args: string[]): Promise<void> {
     });
 }
 
-async function main(): Promise<void> {
-    console.log(chalk.blue("🚀 Starting build process..."));
-    console.log("----------------------------------------");
+interface BuildContext {
+    cargoTargetDir: string;
+    arch: string;
+    binaryName: string;
+    packageOwner: string;
+    packageName: string;
+    githubServerUrl: string;
+    githubToken: string;
+    tag: string;
+    isDryRun: boolean;
+}
 
-    const startTime = Date.now();
-
-    // Required environment variables
+function validateAndExtractBuildContext(): BuildContext {
     const requiredEnvVars = ["CARGO_TARGET_DIR", "ARCH", "BINARY_NAME"];
-
-    // Validate required environment variables
     for (const envVar of requiredEnvVars) {
         if (!process.env[envVar]) {
             console.log(chalk.red(`❌ Error: ${envVar} is not set.`));
@@ -65,138 +76,103 @@ async function main(): Promise<void> {
         }
     }
 
-    const CARGO_TARGET_DIR = process.env.CARGO_TARGET_DIR!;
-    const ARCH = process.env.ARCH!;
-    const BINARY_NAME = process.env.BINARY_NAME!;
-
-    // Validate ARCH
     const validArchs = ["aarch64-apple-darwin", "x86_64-unknown-linux-gnu"];
-    if (!validArchs.includes(ARCH)) {
-        console.log(chalk.red(`❌ Unsupported architecture: ${ARCH}`));
+    const arch = process.env.ARCH!;
+    if (!validArchs.includes(arch)) {
+        console.log(chalk.red(`❌ Unsupported architecture: ${arch}`));
         process.exit(1);
     }
 
-    console.log(chalk.blue(`📦 Binary name: ${BINARY_NAME}`));
-    console.log(chalk.green(`🖥️ Architecture: ${ARCH}`));
-    console.log("----------------------------------------");
+    let isDryRun = false;
+    const packageOwner = process.env.GITHUB_REPOSITORY_OWNER || "pkgowner";
+    const packageName = process.env.GITHUB_REPOSITORY?.split("/")[1] || "pkgname";
+    const githubServerUrl = process.env.GITHUB_SERVER_URL || "https://example.com";
+    const githubToken = process.env.GITHUB_TOKEN || "placeholder_token";
 
-    // Validate toolchains
+    if (
+        packageOwner === "pkgowner" ||
+        packageName === "pkgname" ||
+        githubServerUrl === "https://example.com" ||
+        githubToken === "placeholder_token"
+    ) {
+        isDryRun = true;
+    }
 
+    let tag = "vX.Y.Z";
+    if (process.env.GITHUB_REF && process.env.GITHUB_REF.startsWith("refs/tags/")) {
+        tag = process.env.GITHUB_REF.replace("refs/tags/", "");
+    } else {
+        isDryRun = true;
+    }
+
+    return {
+        cargoTargetDir: process.env.CARGO_TARGET_DIR!,
+        arch,
+        binaryName: process.env.BINARY_NAME!,
+        packageOwner,
+        packageName,
+        githubServerUrl,
+        githubToken,
+        tag,
+        isDryRun,
+    };
+}
+
+async function checkRustToolchain() {
     console.log(chalk.yellow("🔍 Checking Rust toolchain versions..."));
     await spawnProcess("rustc", ["--version"]);
     await spawnProcess("cargo", ["--version"]);
     await spawnProcess("cargo", ["sweep", "--version"]);
     console.log(chalk.green("✅ Rust toolchain versions checked"));
-    console.log("----------------------------------------");
+}
 
-    // Decide important values
-    let isDryRun = false;
-
-    let PACKAGE_OWNER = process.env.GITHUB_REPOSITORY_OWNER || "pkgowner";
-    console.log(chalk.blue(`👤 Package owner: ${PACKAGE_OWNER}`));
-    if (PACKAGE_OWNER === "pkgowner") {
-        isDryRun = true;
-        console.log(chalk.yellow("⚠️ Using placeholder package owner. Forcing dry run."));
-    }
-
-    let PACKAGE_NAME = process.env.GITHUB_REPOSITORY?.split("/")[1] || "pkgname";
-    console.log(chalk.blue(`📦 Package name: ${PACKAGE_NAME}`));
-    if (PACKAGE_NAME === "pkgname") {
-        isDryRun = true;
-        console.log(chalk.yellow("⚠️ Using placeholder package name. Forcing dry run."));
-    }
-
-    let GITHUB_SERVER_URL = process.env.GITHUB_SERVER_URL || "https://example.com";
-    console.log(chalk.blue(`🌐 Server URL: ${GITHUB_SERVER_URL}`));
-    if (GITHUB_SERVER_URL === "https://example.com") {
-        isDryRun = true;
-        console.log(chalk.yellow("⚠️ Using placeholder server URL. Forcing dry run."));
-    }
-
-    let GITHUB_TOKEN = process.env.GITHUB_TOKEN || "placeholder_token";
-    console.log(chalk.blue(`🔑 GitHub Token: ${GITHUB_TOKEN ? "Set" : "Not set"}`));
-    if (GITHUB_TOKEN === "placeholder_token") {
-        isDryRun = true;
-        console.log(chalk.yellow("⚠️ Using placeholder GitHub token. Forcing dry run."));
-    }
-
-    let TAG: string;
-
+async function buildProject() {
     console.log(chalk.yellow("🔨 Building the project..."));
     const buildStart = Date.now();
     await spawnProcess("cargo", ["build", "--verbose", "--release"]);
     const buildTime = Date.now() - buildStart;
     console.log(chalk.green(`✅ Build completed successfully (${buildTime}ms)`));
-    console.log("----------------------------------------");
+    return buildTime;
+}
 
-    if (process.env.GITHUB_REF && process.env.GITHUB_REF.startsWith("refs/tags/")) {
-        TAG = process.env.GITHUB_REF.replace("refs/tags/", "");
-        console.log(chalk.blue(`🏷️ Processing tag: ${TAG}`));
-    } else {
-        TAG = "vX.Y.Z";
-        isDryRun = true;
-        console.log(chalk.yellow(`⚠️ No tag detected. Performing dry run with tag: ${TAG}`));
-    }
-
-    const binaryPath = `${CARGO_TARGET_DIR}/release/${BINARY_NAME}`;
-    console.log(chalk.cyan(`📁 Binary file path: ${binaryPath}`));
-
-    if (
-        await fs
-            .access(binaryPath)
-            .then(() => true)
-            .catch(() => false)
-    ) {
-        const stats = await fs.stat(binaryPath);
-        const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
-        console.log(chalk.green(`✅ Binary file exists. Size: ${sizeInMB} MB`));
-    } else {
-        console.log(chalk.red(`❌ Binary file does not exist at path: ${binaryPath}`));
-        process.exit(1);
-    }
-    console.log("----------------------------------------");
-
-    const PACKAGE_FILE = `${ARCH}.tar.xz`;
-    console.log(chalk.cyan(`📦 Package file name: ${PACKAGE_FILE}`));
+async function createPackageArchive(context: BuildContext) {
+    const packageFile = `${context.arch}.tar.xz`;
+    console.log(chalk.cyan(`📦 Package file name: ${packageFile}`));
 
     console.log(chalk.yellow("📦 Creating package archive..."));
     const archiveStart = Date.now();
     await spawnProcess("tar", [
         "-cJvf",
-        PACKAGE_FILE,
+        packageFile,
         "-C",
-        `${CARGO_TARGET_DIR}/release`,
-        BINARY_NAME,
+        `${context.cargoTargetDir}/release`,
+        context.binaryName,
     ]);
     const archiveTime = Date.now() - archiveStart;
     console.log(chalk.green(`✅ Package archive created successfully (${archiveTime}ms)`));
 
     console.log(chalk.yellow("📋 Showing contents of the archive..."));
-    await spawnProcess("tar", ["wtf", PACKAGE_FILE]);
+    await spawnProcess("tar", ["wtf", packageFile]);
 
-    const stats = await fs.stat(PACKAGE_FILE);
-    const sizeInMB = (stats.size / (1024 * 1024)).toFixed(2);
-    console.log(chalk.green(`📊 Archive size: ${sizeInMB} MB`));
-    console.log("----------------------------------------");
+    const stats = await fs.stat(packageFile);
+    console.log(chalk.green(`📊 Archive size: ${formatBytes(stats.size)}`));
 
-    console.log(chalk.yellow("📖 Reading file content..."));
-    const readStart = Date.now();
-    const fileContent = await fs.readFile(PACKAGE_FILE);
-    const readTime = Date.now() - readStart;
-    console.log(chalk.green(`✅ File content read successfully (${readTime}ms)`));
+    return { packageFile, archiveTime };
+}
 
-    const url = `${GITHUB_SERVER_URL}/api/packages/${PACKAGE_OWNER}/generic/${PACKAGE_NAME}/${TAG}/${PACKAGE_FILE}`;
+async function uploadPackage(context: BuildContext, packageFile: string, fileContent: Buffer) {
+    const url = `${context.githubServerUrl}/api/packages/${context.packageOwner}/generic/${context.packageName}/${context.tag}/${packageFile}`;
     const headers = {
         "Content-Type": "application/octet-stream",
         "Content-Length": fileContent.length.toString(),
-        Authorization: `token ${GITHUB_TOKEN}`,
+        Authorization: `token ${context.githubToken}`,
     };
 
-    let uploadTime = 0;
-    if (isDryRun) {
+    if (context.isDryRun) {
         console.log(chalk.yellow("🔍 Dry run: Simulating package upload to Forgejo..."));
         console.log(chalk.blue("🔗 Would upload to:"), url);
-        console.log(chalk.blue("📊 File size:"), fileContent.length, "bytes");
+        console.log(chalk.blue("📊 File size:"), formatBytes(fileContent.length));
+        return 0;
     } else {
         console.log(chalk.yellow("📤 Uploading package to Forgejo..."));
         const uploadStart = Date.now();
@@ -212,14 +188,73 @@ async function main(): Promise<void> {
             const responseData = await response.text();
             process.stdout.write(responseData);
 
-            uploadTime = Date.now() - uploadStart;
+            const uploadTime = Date.now() - uploadStart;
             console.log(chalk.green(`✅ Package upload completed (${uploadTime}ms)`));
+            return uploadTime;
         } catch (error) {
             console.log(chalk.red("❌ An error occurred during upload:"));
             console.error(error);
             throw error;
         }
     }
+}
+
+async function main(): Promise<void> {
+    console.log(chalk.blue("🚀 Starting build process..."));
+    console.log("----------------------------------------");
+
+    const startTime = Date.now();
+
+    const context = validateAndExtractBuildContext();
+
+    console.log(chalk.blue(`📦 Binary name: ${context.binaryName}`));
+    console.log(chalk.green(`🖥️ Architecture: ${context.arch}`));
+    console.log("----------------------------------------");
+
+    await checkRustToolchain();
+    console.log("----------------------------------------");
+
+    console.log(chalk.blue(`👤 Package owner: ${context.packageOwner}`));
+    console.log(chalk.blue(`📦 Package name: ${context.packageName}`));
+    console.log(chalk.blue(`🌐 Server URL: ${context.githubServerUrl}`));
+    console.log(chalk.blue(`🔑 GitHub Token: ${context.githubToken ? "Set" : "Not set"}`));
+    console.log(chalk.blue(`🏷️ Processing tag: ${context.tag}`));
+
+    if (context.isDryRun) {
+        console.log(chalk.yellow("⚠️ Performing dry run"));
+    }
+    console.log("----------------------------------------");
+
+    const buildTime = await buildProject();
+    console.log("----------------------------------------");
+
+    const binaryPath = `${context.cargoTargetDir}/release/${context.binaryName}`;
+    console.log(chalk.cyan(`📁 Binary file path: ${binaryPath}`));
+
+    if (
+        await fs
+            .access(binaryPath)
+            .then(() => true)
+            .catch(() => false)
+    ) {
+        const stats = await fs.stat(binaryPath);
+        console.log(chalk.green(`✅ Binary file exists. Size: ${formatBytes(stats.size)}`));
+    } else {
+        console.log(chalk.red(`❌ Binary file does not exist at path: ${binaryPath}`));
+        process.exit(1);
+    }
+    console.log("----------------------------------------");
+
+    const { packageFile, archiveTime } = await createPackageArchive(context);
+    console.log("----------------------------------------");
+
+    console.log(chalk.yellow("📖 Reading file content..."));
+    const readStart = Date.now();
+    const fileContent = await fs.readFile(packageFile);
+    const readTime = Date.now() - readStart;
+    console.log(chalk.green(`✅ File content read successfully (${readTime}ms)`));
+
+    const uploadTime = await uploadPackage(context, packageFile, fileContent);
     console.log("----------------------------------------");
 
     console.log(chalk.yellow("🧹 Running cargo sweep..."));
@@ -234,7 +269,7 @@ async function main(): Promise<void> {
     console.log(chalk.cyan(`🔨 Build time: ${buildTime}ms`));
     console.log(chalk.cyan(`📦 Archive creation time: ${archiveTime}ms`));
     console.log(chalk.cyan(`📖 File read time: ${readTime}ms`));
-    if (!isDryRun) {
+    if (!context.isDryRun) {
         console.log(chalk.cyan(`📤 Upload time: ${uploadTime}ms`));
     }
     console.log(chalk.cyan(`🧹 Sweep time: ${sweepTime}ms`));
