@@ -11,8 +11,10 @@ jobs:
         runs-on: mac-arm
         env:
             CARGO_TARGET_DIR: ~/.cache/act/bearsays-mac-build/target
+            PNPM_CACHE_FOLDER: ~/.cache/pnpm
             BINARY_NAME: bearsays
             ARCH: aarch64-apple-darwin
+            GITHUB_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
         steps:
             - name: Check out repository code
               uses: actions/checkout@v4
@@ -31,8 +33,10 @@ jobs:
                 password: "${{ secrets.BEARCOVE_PULL_PASSWORD }}"
         env:
             CARGO_TARGET_DIR: /var/persistent-build-storage/bearsays-linux-build/target
+            PNPM_CACHE_FOLDER: /var/persistent-build-storage/pnpm-cache
             BINARY_NAME: bearsays
             ARCH: x86_64-unknown-linux-gnu
+            GITHUB_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
         steps:
             - name: Check out repository code
               uses: actions/checkout@v4
