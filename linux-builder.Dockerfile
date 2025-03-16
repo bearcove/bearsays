@@ -52,3 +52,6 @@ RUN curl -fsSL https://deb.nodesource.com/setup_current.x | bash - && \
     gzip \
     && rm -rf /var/lib/apt/lists/*
 RUN npm install -g pnpm
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    xz-utils \
+    && rm -rf /var/lib/apt/lists/*

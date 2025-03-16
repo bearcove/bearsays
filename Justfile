@@ -9,5 +9,6 @@ linux-builder-image:
 
 linux-builder-image-push:
     #!/bin/bash -eux
+    just linux-builder-image
     export TAG=code.bearcove.cloud/bearcove/linux-builder:rust-1.85.0
     docker push "${TAG}"
