@@ -87,7 +87,7 @@ function validateAndExtractBuildContext(): BuildContext {
     const packageOwner = process.env.GITHUB_REPOSITORY_OWNER || "pkgowner";
     const packageName = process.env.GITHUB_REPOSITORY?.split("/")[1] || "pkgname";
     const githubServerUrl = process.env.GITHUB_SERVER_URL || "https://example.com";
-    const githubToken = process.env.GITHUB_TOKEN || "placeholder_token";
+    const githubToken = process.env.FORGEJO_READWRITE_TOKEN || "placeholder_token";
 
     if (
         packageOwner === "pkgowner" ||

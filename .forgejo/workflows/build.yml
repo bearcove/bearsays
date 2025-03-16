@@ -14,7 +14,7 @@ jobs:
             PNPM_CACHE_FOLDER: ~/.cache/pnpm
             BINARY_NAME: bearsays
             ARCH: aarch64-apple-darwin
-            GITHUB_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
+            FORGEJO_READWRITE_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
         steps:
             - name: Check out repository code
               uses: actions/checkout@v4
@@ -36,7 +36,7 @@ jobs:
             PNPM_CACHE_FOLDER: /var/persistent-build-storage/pnpm-cache
             BINARY_NAME: bearsays
             ARCH: x86_64-unknown-linux-gnu
-            GITHUB_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
+            FORGEJO_READWRITE_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
         steps:
             - name: Check out repository code
               uses: actions/checkout@v4
