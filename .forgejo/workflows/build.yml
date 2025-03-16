@@ -19,10 +19,15 @@ jobs:
                   cargo --version
             - name: Build
               run: |
-                  du -sh $CARGO_TARGET_DIR
+                  echo "Building into $CARGO_TARGET_DIR"
+                  mkdir -p $CARGO_TARGET_DIR
                   cargo build --release
+                  echo "Sweeping..."
                   cargo install cargo-sweep
+                  echo "Size before:"
+                  du -sh $CARGO_TARGET_DIR
                   cargo sweep --time 30
+                  echo "Size after:"
                   du -sh $CARGO_TARGET_DIR
     linux-build:
         runs-on: docker
