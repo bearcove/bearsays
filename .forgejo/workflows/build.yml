@@ -22,6 +22,8 @@ jobs:
                   echo "Building into ${CARGO_TARGET_DIR}"
                   mkdir -p ${CARGO_TARGET_DIR}
                   cargo build --verbose --release --timings
+                  cp ${CARGO_TARGET_DIR}/cargo-timings/cargo-timing.html ./cargo-timing.html
+
                   echo "Sweeping..."
                   cargo install cargo-sweep
                   echo "Size before:"
@@ -33,7 +35,7 @@ jobs:
               uses: actions/upload-artifact@v3
               with:
                   name: cargo-timing
-                  path: ${CARGO_TARGET_DIR}/cargo-timings/cargo-timing.html
+                  path: ./cargo-timing.html
     linux-build:
         runs-on: docker
         container:
