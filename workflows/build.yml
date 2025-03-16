@@ -1,0 +1,51 @@
+name: check
+on:
+    push:
+        branches: [main]
+        tags:
+            - "*"
+    pull_request:
+        branches: [main]
+jobs:
+    mac-build:
+        runs-on: mac-arm
+        steps:
+            - name: Check out repository code
+              uses: actions/checkout@v4
+            - name: Make sure cargo/rustup is installed
+              run: |
+                  cargo --version
+            - name: Cache Cargo Build
+              uses: https://code.forgejo.org/actions/cache@v3
+              with:
+                  path: target
+                  key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-cargo-build-
+            - name: Build
+              run: |
+                  cargo build --release
+    linux-build:
+        runs-on: docker
+        container:
+            image: code.bearcove.cloud/bearcove/earthly-ci:latest
+            credentials:
+                username: "fasterthanlime"
+                password: "${{ secrets.BEARCOVE_PULL_PASSWORD }}"
+        steps:
+            - name: Check out repository code
+              uses: actions/checkout@v4
+
+            - name: Make sure cargo/rustup is installed
+              run: |
+                  cargo --version
+            - name: Cache Cargo Build
+              uses: https://code.forgejo.org/actions/cache@v3
+              with:
+                  path: target
+                  key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-cargo-build-
+            - name: Build
+              run: |
+                  cargo build --release
