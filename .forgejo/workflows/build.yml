@@ -11,30 +11,15 @@ jobs:
         runs-on: mac-arm
         env:
             CARGO_TARGET_DIR: ~/.cache/act/bearsays-mac-build/target
+            BINARY_NAME: bearsays
+            ARCH: aarch64-apple-darwin
         steps:
             - name: Check out repository code
               uses: actions/checkout@v4
-            - name: Make sure cargo/rustup is installed
-              run: |
-                  cargo --version
             - name: Build
               run: |
-                  echo "Building into ${CARGO_TARGET_DIR}"
-                  mkdir -p ${CARGO_TARGET_DIR}
-                  cargo build --verbose --release --timings
-                  cp ${CARGO_TARGET_DIR}/cargo-timings/cargo-timing.html ./cargo-timing.html
-
-                  echo "Sweeping..."
-                  echo "Size before:"
-                  du -sh ${CARGO_TARGET_DIR}
-                  cargo sweep --time 30
-                  echo "Size after:"
-                  du -sh ${CARGO_TARGET_DIR}
-            - name: Upload timing results
-              uses: actions/upload-artifact@v3
-              with:
-                  name: cargo-timing
-                  path: ./cargo-timing.html
+                  (cd scripts && pnpm i)
+                  node scripts/index.ts
     linux-build:
         runs-on: docker
         container:
@@ -46,27 +31,12 @@ jobs:
                 password: "${{ secrets.BEARCOVE_PULL_PASSWORD }}"
         env:
             CARGO_TARGET_DIR: /var/persistent-build-storage/bearsays-linux-build/target
+            BINARY_NAME: bearsays
+            ARCH: x86_64-unknown-linux-gnu
         steps:
             - name: Check out repository code
               uses: actions/checkout@v4
-            - name: Make sure cargo/rustup is installed
-              run: |
-                  cargo --version
             - name: Build
               run: |
-                  echo "Building into ${CARGO_TARGET_DIR}"
-                  mkdir -p ${CARGO_TARGET_DIR}
-                  cargo build --verbose --release --timings
-                  cp ${CARGO_TARGET_DIR}/cargo-timings/cargo-timing.html ./cargo-timing.html
-
-                  echo "Sweeping..."
-                  echo "Size before:"
-                  du -sh ${CARGO_TARGET_DIR}
-                  cargo sweep --time 30
-                  echo "Size after:"
-                  du -sh ${CARGO_TARGET_DIR}
-            - name: Upload timing results
-              uses: actions/upload-artifact@v3
-              with:
-                  name: cargo-timing
-                  path: ./cargo-timing.html
+                  (cd scripts && pnpm i)
+                  node scripts/index.ts
