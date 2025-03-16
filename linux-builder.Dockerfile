@@ -36,3 +36,16 @@ ENV CARGO_PROFILE_RELEASE_DEBUG="line-tables-only"
 ENV CARGO_PROFILE_RELEASE_SPLIT_DEBUGINFO="packed"
 ENV CC=clang
 ENV CXX=clang++
+# Install minimal dependencies for running Gitea/Forgejo Actions
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nodejs \
+    npm \
+    curl \
+    bash \
+    git \
+    coreutils \
+    ca-certificates \
+    openssh-client \
+    tar \
+    gzip \
+    && rm -rf /var/lib/apt/lists/*
