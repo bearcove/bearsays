@@ -21,9 +21,17 @@ export function formatBytes(bytes: number): string {
     return chalk.cyan(`${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`);
 }
 
-export async function spawnProcess(command: string, args: string[]): Promise<void> {
+export async function spawnProcess({
+    command,
+    args,
+    env,
+}: {
+    command: string;
+    args: string[];
+    env?: NodeJS.ProcessEnv;
+}): Promise<void> {
     return new Promise((resolve, reject) => {
-        const child = spawn(command, args, { stdio: "inherit" });
+        const child = spawn(command, args, { stdio: "inherit", env: env || process.env });
         child.on("close", (code) => {
             if (code === 0) {
                 resolve();

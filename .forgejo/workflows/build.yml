@@ -10,11 +10,14 @@ jobs:
     mac-build:
         runs-on: mac-arm
         env:
-            CARGO_TARGET_DIR: ~/.cache/act/bearsays-mac-build/target
-            PNPM_CACHE_FOLDER: ~/.cache/pnpm
+            CARGO_HOME: /Users/amos/.cache/cargo
+            CARGO_TARGET_DIR: /Users/amos/.cache/bearsays-mac-build/target
+            PNPM_CACHE_FOLDER: /Users/amos/.cache/pnpm
             BINARY_NAME: bearsays
             ARCH: aarch64-apple-darwin
             FORGEJO_READWRITE_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
+            RUSTFLAGS: "-Z remap-cwd-prefix=."
+            RUSTC_BOOTSTRAP: 1
         steps:
             - name: Check out repository code
               uses: actions/checkout@v4
@@ -33,11 +36,16 @@ jobs:
                 username: "token"
                 password: "${{ secrets.BEARCOVE_PULL_PASSWORD }}"
         env:
+            CARGO_HOME: /var/persistent-build-storage/cargo
             CARGO_TARGET_DIR: /var/persistent-build-storage/bearsays-linux-build/target
             PNPM_CACHE_FOLDER: /var/persistent-build-storage/pnpm-cache
             BINARY_NAME: bearsays
             ARCH: x86_64-unknown-linux-gnu
             FORGEJO_READWRITE_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
+            RUSTFLAGS: "-Z remap-cwd-prefix=."
+            RUSTC_BOOTSTRAP: 1
+            CLICOLOR: 1
+            CLICOLOR_FORCE: 1
         steps:
             - name: Check out repository code
               uses: actions/checkout@v4

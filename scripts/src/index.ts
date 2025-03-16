@@ -42,16 +42,28 @@ import {
 
 async function checkRustToolchain() {
     console.log(chalk.yellow("🔍 Checking Rust toolchain versions..."));
-    await spawnProcess("rustc", ["--version"]);
-    await spawnProcess("cargo", ["--version"]);
-    await spawnProcess("cargo", ["sweep", "--version"]);
+    await spawnProcess({
+        command: "rustc",
+        args: ["--version"],
+    });
+    await spawnProcess({
+        command: "cargo",
+        args: ["--version"],
+    });
+    await spawnProcess({
+        command: "cargo",
+        args: ["sweep", "--version"],
+    });
     console.log(chalk.green("✅ Rust toolchain versions checked"));
 }
 
 async function buildProject() {
     console.log(chalk.yellow("🔨 Building the project..."));
     const buildStart = Date.now();
-    await spawnProcess("cargo", ["build", "--verbose", "--release"]);
+    await spawnProcess({
+        command: "cargo",
+        args: ["build", "--verbose", "--release"],
+    });
     const buildTime = Date.now() - buildStart;
     console.log(chalk.green(`✅ Build completed successfully (${buildTime}ms)`));
     return buildTime;
@@ -63,18 +75,39 @@ async function createPackageArchive(context: BuildContext) {
 
     console.log(chalk.yellow("📦 Creating package archive..."));
     const archiveStart = Date.now();
-    await spawnProcess("tar", [
-        "-cJvf",
-        packageFile,
-        "-C",
-        `${context.cargoTargetDir}/release`,
-        context.binaryName,
-    ]);
+
+    // Get the list of files to package
+    const releaseDir = `${context.cargoTargetDir}/release`;
+    const filesToPackage = await fs.readdir(releaseDir);
+
+    // Filter files based on platform
+    const libraryPattern = context.arch.includes("apple") ? /^lib.*\.dylib$/ : /^lib.*\.so$/;
+    const filesToInclude = filesToPackage.filter(
+        (file: string) => file === context.binaryName || libraryPattern.test(file),
+    );
+
+    console.log(chalk.cyan("📋 Files to be packaged:"));
+    for (const file of filesToInclude) {
+        const filePath = `${releaseDir}/${file}`;
+        const stats = await fs.stat(filePath);
+        console.log(chalk.blue(`  ${file}`), chalk.green(`(${formatBytes(stats.size)})`));
+    }
+
+    // Create the archive
+    await spawnProcess({
+        command: "tar",
+        args: ["-cJvf", packageFile, "-C", releaseDir, ...filesToInclude],
+        env: { ...process.env, XZ_OPT: "-2 -T0" },
+    });
+
     const archiveTime = Date.now() - archiveStart;
     console.log(chalk.green(`✅ Package archive created successfully (${archiveTime}ms)`));
 
     console.log(chalk.yellow("📋 Showing contents of the archive..."));
-    await spawnProcess("tar", ["wtf", packageFile]);
+    await spawnProcess({
+        command: "tar",
+        args: ["wtf", packageFile],
+    });
 
     const stats = await fs.stat(packageFile);
     console.log(chalk.green(`📊 Archive size: ${formatBytes(stats.size)}`));
@@ -197,7 +230,10 @@ async function main(): Promise<void> {
 
     console.log(chalk.yellow("🧹 Running cargo sweep..."));
     const sweepStart = Date.now();
-    await spawnProcess("cargo", ["sweep", "--time", "30"]);
+    await spawnProcess({
+        command: "cargo",
+        args: ["sweep", "--time", "30"],
+    });
     const sweepTime = Date.now() - sweepStart;
     console.log(chalk.green(`✅ Cargo sweep completed (${sweepTime}ms)`));
 
