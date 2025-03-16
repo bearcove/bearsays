@@ -10,7 +10,7 @@ jobs:
     mac-build:
         runs-on: mac-arm
         env:
-            CARGO_HOME: /Users/amos/.cache/cargo
+            CARGO_HOME: /Users/amos/.cache/bearsays-mac-build/cargo
             CARGO_TARGET_DIR: /Users/amos/.cache/bearsays-mac-build/target
             PNPM_CACHE_FOLDER: /Users/amos/.cache/pnpm
             BINARY_NAME: bearsays
@@ -36,7 +36,7 @@ jobs:
                 username: "token"
                 password: "${{ secrets.BEARCOVE_PULL_PASSWORD }}"
         env:
-            CARGO_HOME: /var/persistent-build-storage/cargo
+            CARGO_HOME: /var/persistent-build-storage/bearsays-linux-build/cargo
             CARGO_TARGET_DIR: /var/persistent-build-storage/bearsays-linux-build/target
             PNPM_CACHE_FOLDER: /var/persistent-build-storage/pnpm-cache
             BINARY_NAME: bearsays
