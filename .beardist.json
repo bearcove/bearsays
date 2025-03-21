@@ -1,0 +1,8 @@
+{
+    "binary_name": "bearsays",
+    "org": "bearcove",
+    "name": "bearsays",
+    "description": "Cool bear says stuff",
+    "homepage": "https://code.bearcove.cloud/bearcove/bearsays",
+    "license": "MIT+Apache-2.0"
+}
