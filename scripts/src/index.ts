@@ -58,15 +58,18 @@ async function checkRustToolchain() {
 }
 
 async function buildProject() {
-    console.log(chalk.yellow("🕒 Setting timestamp for all files..."));
-    const touchStart = Date.now();
-    const timestamp = process.platform === "darwin" ? "202301010000" : "202301010000.00";
+    const sourceDir = process.cwd();
+    const cacheDir = process.env.CARGO_TARGET_DIR;
+
+    if (!cacheDir) {
+        throw new Error("CARGO_TARGET_DIR environment variable is not set");
+    }
+
+    console.log(chalk.yellow("🕒 Running timelord"));
     await spawnProcess({
-        command: "find",
-        args: [".", "-type", "f", "-exec", "touch", "-t", timestamp, "{}", "+"],
+        command: "timelord",
+        args: ["--source-dir", sourceDir, "--cache-dir", cacheDir],
     });
-    const touchTime = Date.now() - touchStart;
-    console.log(chalk.green(`✅ Timestamp set for all files (${touchTime}ms)`));
 
     console.log(chalk.yellow("🔨 Building the project..."));
     const buildStart = Date.now();
