@@ -55,4 +55,6 @@ RUN npm install -g pnpm
 RUN apt-get update && apt-get install -y --no-install-recommends \
     xz-utils \
     && rm -rf /var/lib/apt/lists/*
-RUN cargo install --locked --git https://github.com/fasterthanlime/timelord
+RUN cargo install --locked --git https://github.com/fasterthanlime/timelord --rev 01cd745957e1b37e509b7bc1ae5301afad8eeb74 && \
+    which timelord && \
+    timelord --version

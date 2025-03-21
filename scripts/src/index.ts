@@ -68,7 +68,7 @@ async function buildProject() {
     console.log(chalk.yellow("🕒 Running timelord"));
     await spawnProcess({
         command: "timelord",
-        args: ["--source-dir", sourceDir, "--cache-dir", cacheDir],
+        args: ["sync", "--source-dir", sourceDir, "--cache-dir", cacheDir],
     });
 
     console.log(chalk.yellow("🔨 Building the project..."));

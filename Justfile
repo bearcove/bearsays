@@ -8,9 +8,13 @@ update-formula:
 linux-builder-image:
     #!/bin/bash -eux
     export TAG=code.bearcove.cloud/bearcove/linux-builder:rust-1.85.0
-    podman build --file linux-builder.Containerfile --tag "${TAG}" --platform linux/amd64 .
+    podman untag "${TAG}"
+    podman build --file linux-builder.Containerfile --jobs $(nproc) --tag "${TAG}" --platform linux/amd64 .
     podman inspect --size "${TAG}"
-    podman run --rm --platform linux/amd64 "${TAG}" rustc --version
+    podman run --pull=never --rm --platform linux/amd64 "${TAG}" rustc --version
+    podman run --pull=never --rm --platform linux/amd64 "${TAG}" cargo sweep --version
+    podman run --pull=never --rm --platform linux/amd64 "${TAG}" cargo nextest --version
+    podman run --pull=never --rm --platform linux/amd64 "${TAG}" timelord --version
 
 linux-builder-image-push:
     #!/bin/bash -eux
