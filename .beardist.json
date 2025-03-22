@@ -1,9 +1,11 @@
 {
-    "version": 1,
+    "version": 2,
     "binary_name": "bearsays",
     "org": "bearcove",
     "name": "bearsays",
     "description": "Cool bear says stuff",
     "homepage": "https://code.bearcove.cloud/bearcove/bearsays",
-    "license": "MIT+Apache-2.0"
+    "license": "MIT+Apache-2.0",
+    "forgejo_server_url": "https://code.bearcove.cloud",
+    "forgejo_readonly_token": "84b4b6c143f3c96dc56dbb3b098646dea1b57485"
 }
