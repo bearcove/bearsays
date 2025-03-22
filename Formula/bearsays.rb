@@ -17,8 +17,6 @@ class Bearsays < Formula
 
   def install
     bin.install "bearsays"
-    lib.install Dir["lib*.dylib"] if OS.mac?
-    lib.install Dir["lib*.so"] if OS.linux?
   end
 
   test do
