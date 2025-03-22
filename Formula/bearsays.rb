@@ -2,6 +2,7 @@
 
 # Cool bear says stuff
 class Bearsays < Formula
+  keg_only "not intended to be linked globally (ships rust libstd and its own modules, no useful lib)"
   desc "Cool bear says stuff"
   homepage "https://code.bearcove.cloud/bearcove/bearsays"
   version "2.3.3"
@@ -17,6 +18,8 @@ class Bearsays < Formula
 
   def install
     bin.install "bearsays"
+    lib.install Dir["lib*.dylib"] if OS.mac?
+    lib.install Dir["lib*.so"] if OS.linux?
   end
 
   test do
