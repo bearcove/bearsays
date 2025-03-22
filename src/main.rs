@@ -6,7 +6,7 @@ fn main() {
     let message = if args.len() > 1 {
         args[1..].join(" ")
     } else {
-        "Hi, I'm a bear!".to_string()
+        "Hi, I'm a bear.".to_string()
     };
 
     // Create ASCII art of a bear saying the message
