@@ -4,15 +4,15 @@
 class Bearsays < Formula
   desc "Cool bear says stuff"
   homepage "https://code.bearcove.cloud/bearcove/bearsays"
-  version "2.3.0"
+  version "2.3.2"
   license "MIT+Apache-2.0"
 
   if OS.mac?
-    url "https://code.bearcove.cloud/api/packages/bearcove/generic/bearsays/v2.3.0/aarch64-apple-darwin.tar.xz", headers: ["Authorization: token 84b4b6c143f3c96dc56dbb3b098646dea1b57485"]
-    sha256 "7eefe40d5b57146473f6bb4026130c707d1538ebd4acd419c44300e17e4f2f3e"
+    url "https://code.bearcove.cloud/api/packages/bearcove/generic/bearsays/v2.3.2/aarch64-apple-darwin.tar.xz", headers: ["Authorization: token 84b4b6c143f3c96dc56dbb3b098646dea1b57485"]
+    sha256 "0574dd13edc137d5fe9aa550b86795b930bceb0bf8c74017253c150c2833e92c"
   elsif OS.linux?
-    url "https://code.bearcove.cloud/api/packages/bearcove/generic/bearsays/v2.3.0/x86_64-unknown-linux-gnu.tar.xz", headers: ["Authorization: token 84b4b6c143f3c96dc56dbb3b098646dea1b57485"]
-    sha256 "79c89656384c8baca9457d4077ddb9938e70af1eadbbc8b2284caace8646949d"
+    url "https://code.bearcove.cloud/api/packages/bearcove/generic/bearsays/v2.3.2/x86_64-unknown-linux-gnu.tar.xz", headers: ["Authorization: token 84b4b6c143f3c96dc56dbb3b098646dea1b57485"]
+    sha256 "66f6334637a32f03af95162d8a23887e105929b9b9097efdbe41600fdd0d64c7"
   end
 
   def install
