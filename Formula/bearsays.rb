@@ -5,21 +5,21 @@ class Bearsays < Formula
   keg_only "not intended to be linked globally (ships rust libstd and its own modules, no useful lib)"
   desc "Cool bear says stuff"
   homepage "https://code.bearcove.cloud/bearcove/bearsays"
-  version "2.3.3"
+  version "3.0.0"
   license "MIT+Apache-2.0"
 
   if OS.mac?
-    url "https://code.bearcove.cloud/api/packages/bearcove/generic/bearsays/v2.3.3/aarch64-apple-darwin.tar.xz", headers: ["Authorization: token 84b4b6c143f3c96dc56dbb3b098646dea1b57485"]
-    sha256 "e2a20e75ca83c301349ab09dcc7cb7ec5a694d055c9d00db9066ea9ec3ff248b"
+    url "https://code.bearcove.cloud/api/packages/bearcove/generic/bearsays/v3.0.0/aarch64-apple-darwin.tar.xz", headers: ["Authorization: token 84b4b6c143f3c96dc56dbb3b098646dea1b57485"]
+    sha256 "b37e55d08e8482329e5adcc47930d153d39aad0d6f8c533c21e8a3ec8baccb4c"
   elsif OS.linux?
-    url "https://code.bearcove.cloud/api/packages/bearcove/generic/bearsays/v2.3.3/x86_64-unknown-linux-gnu.tar.xz", headers: ["Authorization: token 84b4b6c143f3c96dc56dbb3b098646dea1b57485"]
-    sha256 "9c52620c95665e91427376bc0f0560464631ab08a7fd9a75487aa1894464946a"
+    url "https://code.bearcove.cloud/api/packages/bearcove/generic/bearsays/v3.0.0/x86_64-unknown-linux-gnu.tar.xz", headers: ["Authorization: token 84b4b6c143f3c96dc56dbb3b098646dea1b57485"]
+    sha256 "f6e205196c705c5074129df40004581ed08d101643faf62bd6fe6906846eb32d"
   end
 
   def install
     bin.install "bearsays"
-    lib.install Dir["lib*.dylib"] if OS.mac?
-    lib.install Dir["lib*.so"] if OS.linux?
+    libexec.install Dir["lib*.dylib"] if OS.mac?
+    libexec.install Dir["lib*.so"] if OS.linux?
   end
 
   test do
