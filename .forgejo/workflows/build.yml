@@ -62,3 +62,9 @@ jobs:
             - name: Trigger formula update
               run: |
                   echo "This is where I'd trigger an update!"
+                  curl -X POST \
+                    -H "Authorization: token $FORGEJO_READWRITE_TOKEN" \
+                    -H "Accept: application/json" \
+                    -H "Content-Type: application/json" \
+                    -d '{"ref": "main", "inputs": {"repository": "'$GITHUB_REPOSITORY'"}}' \
+                    https://code.bearcove.cloud/api/v1/repos/bearcove/tap/actions/workflows/bump/dispatches
