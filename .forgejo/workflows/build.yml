@@ -23,7 +23,7 @@ jobs:
     linux-build:
         runs-on: docker
         container:
-            image: code.bearcove.cloud/bearcove/linux-builder:rust-1.85.1
+            image: code.bearcove.cloud/bearcove/beardist:latest
             volumes:
                 - /var/persistent-build-storage:/var/persistent-build-storage
             credentials:
