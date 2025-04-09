@@ -1,72 +1,72 @@
 name: check
 on:
-    push:
-        branches: [main]
-        tags:
-            - "*"
-    pull_request:
-        branches: [main]
+  push:
+    branches: [main]
+    tags:
+      - "*"
+  pull_request:
+    branches: [main]
 jobs:
-    mac-build:
-        runs-on: mac-arm
-        env:
-            BEARDIST_CACHE_DIR: /tmp/beardist-cache
-            BEARDIST_ARTIFACT_NAME: aarch64-apple-darwin
-            FORGEJO_READWRITE_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
-            CLICOLOR: 1
-            CLICOLOR_FORCE: 1
-        steps:
-            - name: Check out repository code
-              uses: actions/checkout@v4
-            - name: Build
-              run: |
-                  beardist build
-    linux-build:
-        runs-on: docker
-        container:
-            image: code.bearcove.cloud/bearcove/beardist:latest
-            volumes:
-                - /var/persistent-build-storage:/var/persistent-build-storage
-            credentials:
-                username: "token"
-                password: "${{ secrets.BEARCOVE_PULL_PASSWORD }}"
-        env:
-            BEARDIST_CACHE_DIR: /var/persistent-build-storage/beardist-cache
-            BEARDIST_ARTIFACT_NAME: x86_64-unknown-linux-gnu
-            FORGEJO_READWRITE_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
-            CLICOLOR: 1
-            CLICOLOR_FORCE: 1
-        steps:
-            - name: Check out repository code
-              uses: actions/checkout@v4
-            - name: Build
-              run: |
-                  beardist build
-    trigger-formula-update:
-        needs: [mac-build, linux-build]
-        if: startsWith(github.ref, 'refs/tags/')
-        runs-on: docker
-        container:
-            image: code.bearcove.cloud/bearcove/beardist:latest
-            volumes:
-                - /var/persistent-build-storage:/var/persistent-build-storage
-            credentials:
-                username: "token"
-                password: "${{ secrets.BEARCOVE_PULL_PASSWORD }}"
-        env:
-            BEARDIST_CACHE_DIR: /var/persistent-build-storage/beardist-cache
-            FORGEJO_READWRITE_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
-            CLICOLOR: 1
-            CLICOLOR_FORCE: 1
-        steps:
-            - name: Check out repository code
-              uses: actions/checkout@v4
-            - name: Trigger formula update
-              run: |
-                  echo "This is where I'd trigger an update!"
-                  curl -f -X POST \
-                    -H "Authorization: token $FORGEJO_READWRITE_TOKEN" \
-                    -H "Accept: application/json" \
-                    -H "Content-Type: application/json" \
-                    -d '{"ref": "main", "inputs": {"repository": "'$GITHUB_REPOSITORY'"}}' \
-                    https://code.bearcove.cloud/api/v1/repos/bearcove/tap/actions/workflows/bump.yml/dispatches
+  mac-build:
+    runs-on: mac-arm
+    env:
+      BEARDIST_CACHE_DIR: $HOME/.beardist-cache
+      BEARDIST_ARTIFACT_NAME: aarch64-apple-darwin
+      FORGEJO_READWRITE_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
+      CLICOLOR: 1
+      CLICOLOR_FORCE: 1
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Build
+        run: |
+          beardist build
+  linux-build:
+    runs-on: docker
+    container:
+      image: code.bearcove.cloud/bearcove/beardist:latest
+      volumes:
+        - /var/persistent-build-storage:/var/persistent-build-storage
+      credentials:
+        username: "token"
+        password: "${{ secrets.BEARCOVE_PULL_PASSWORD }}"
+    env:
+      BEARDIST_CACHE_DIR: /var/persistent-build-storage/beardist-cache
+      BEARDIST_ARTIFACT_NAME: x86_64-unknown-linux-gnu
+      FORGEJO_READWRITE_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
+      CLICOLOR: 1
+      CLICOLOR_FORCE: 1
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Build
+        run: |
+          beardist build
+  trigger-formula-update:
+    needs: [mac-build, linux-build]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: docker
+    container:
+      image: code.bearcove.cloud/bearcove/beardist:latest
+      volumes:
+        - /var/persistent-build-storage:/var/persistent-build-storage
+      credentials:
+        username: "token"
+        password: "${{ secrets.BEARCOVE_PULL_PASSWORD }}"
+    env:
+      BEARDIST_CACHE_DIR: /var/persistent-build-storage/beardist-cache
+      FORGEJO_READWRITE_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
+      CLICOLOR: 1
+      CLICOLOR_FORCE: 1
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Trigger formula update
+        run: |
+          echo "This is where I'd trigger an update!"
+          curl -f -X POST \
+            -H "Authorization: token $FORGEJO_READWRITE_TOKEN" \
+            -H "Accept: application/json" \
+            -H "Content-Type: application/json" \
+            -d '{"ref": "main", "inputs": {"repository": "'$GITHUB_REPOSITORY'"}}' \
+            https://code.bearcove.cloud/api/v1/repos/bearcove/tap/actions/workflows/bump.yml/dispatches
