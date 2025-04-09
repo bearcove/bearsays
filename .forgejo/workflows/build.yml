@@ -10,7 +10,7 @@ jobs:
   mac-build:
     runs-on: mac-arm
     env:
-      BEARDIST_CACHE_DIR: $HOME/.cache/beardist
+      BEARDIST_CACHE_DIR: ${{ env.HOME }}/.cache/beardist
       BEARDIST_ARTIFACT_NAME: aarch64-apple-darwin
       FORGEJO_READWRITE_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
       CLICOLOR: 1
