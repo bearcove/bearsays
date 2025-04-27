@@ -1,0 +1,81 @@
+name: check
+on:
+  push:
+    branches: [main]
+    tags:
+      - "*"
+  pull_request:
+    branches: [main]
+  merge_group:
+jobs:
+  mac-build:
+    runs-on: depot-macos-latest
+    env:
+      BEARDIST_CACHE_DIR: /tmp/cache/beardist
+      BEARDIST_ARTIFACT_NAME: aarch64-apple-darwin
+      GH_READWRITE_TOKEN: ${{ secrets.GH_READWRITE_TOKEN }}
+      CLICOLOR: 1
+      CLICOLOR_FORCE: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Set default rustup toolchain
+        run: |
+          rustup default 1.86.0
+          rustc --version
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/cache
+          key: ${{ runner.os }}-aarch64-apple-darwin-home-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-aarch64-apple-darwin-home-
+      - name: Download beardist
+        run: |
+          curl -L -o beardist.tar.xz https://github.com/bearcove/beardist/releases/download/v2.1.0/aarch64-apple-darwin.tar.xz
+          tar -xf beardist.tar.xz
+          chmod +x beardist
+          sudo mv beardist /usr/local/bin/
+      - name: Install required dependencies
+        run: |
+          # Install pnpm package manager and bun via tap
+          brew tap oven-sh/bun
+          brew install node pnpm cargo-sweep cargo-nextest just bun coreutils xz dav1d
+      - name: Build
+        run: |
+          beardist build
+  linux-build:
+    strategy:
+      matrix:
+        include:
+          - runs-on: depot-ubuntu-24.04-16
+            platform: linux/amd64
+            artifact: x86_64-unknown-linux-gnu
+          - runs-on: depot-ubuntu-24.04-arm-16
+            platform: linux/arm64
+            artifact: aarch64-unknown-linux-gnu
+    runs-on: ${{ matrix.runs-on }}
+    container:
+      image: ghcr.io/bearcove/beardist:latest
+    env:
+      BEARDIST_CACHE_DIR: /tmp/cache/beardist/${{ matrix.platform }}
+      BEARDIST_ARTIFACT_NAME: ${{ matrix.artifact }}
+      GH_READWRITE_TOKEN: ${{ secrets.GH_READWRITE_TOKEN }}
+      CLICOLOR: 1
+      CLICOLOR_FORCE: 1
+      IMAGE_PLATFORM: ${{ matrix.platform }}
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/cache
+          key: ${{ runner.os }}-${{ matrix.artifact }}-home-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.artifact }}-home-
+      - name: Build
+        shell: bash
+        run: |
+          beardist build

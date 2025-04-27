@@ -24,12 +24,9 @@ jobs:
   linux-build:
     runs-on: docker
     container:
-      image: code.bearcove.cloud/bearcove/beardist:latest
+      image: ghcr.io/bearcove/beardist:latest
       volumes:
         - /var/persistent-build-storage:/var/persistent-build-storage
-      credentials:
-        username: "token"
-        password: "${{ secrets.BEARCOVE_PULL_PASSWORD }}"
     env:
       BEARDIST_CACHE_DIR: /var/persistent-build-storage/beardist-cache
       BEARDIST_ARTIFACT_NAME: x86_64-unknown-linux-gnu
@@ -50,9 +47,6 @@ jobs:
       image: code.bearcove.cloud/bearcove/beardist:latest
       volumes:
         - /var/persistent-build-storage:/var/persistent-build-storage
-      credentials:
-        username: "token"
-        password: "${{ secrets.BEARCOVE_PULL_PASSWORD }}"
     env:
       BEARDIST_CACHE_DIR: /var/persistent-build-storage/beardist-cache
       FORGEJO_READWRITE_TOKEN: ${{ secrets.FORGEJO_READWRITE_TOKEN }}
